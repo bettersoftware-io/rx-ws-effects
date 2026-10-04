@@ -1,0 +1,65 @@
+{
+  "name": "@better-software/rx-ws-effects",
+  "version": "0.1.0",
+  "description": "Declarative WebSocket message handling on RxJS: each effect is a pure function from a stream of incoming messages to a stream of outgoing ones.",
+  "license": "MIT",
+  "author": "bettersoftware-io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bettersoftware-io/rx-ws-effects.git"
+  },
+  "homepage": "https://github.com/bettersoftware-io/rx-ws-effects#readme",
+  "bugs": "https://github.com/bettersoftware-io/rx-ws-effects/issues",
+  "keywords": [
+    "rxjs",
+    "websocket",
+    "effects",
+    "declarative",
+    "reactive",
+    "server",
+    "simulator"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@12.6.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "typecheck:examples": "tsc --noEmit -p examples/tsconfig.json",
+    "check:package": "publint --strict && attw --pack . --profile esm-only && node scripts/smoke-test-package.mts",
+    "check": "pnpm typecheck && pnpm test:coverage && pnpm build && pnpm typecheck:examples && pnpm check:package",
+    "prepublishOnly": "pnpm check"
+  },
+  "peerDependencies": {
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@types/node": "^26.6.4",
+    "@types/ws": "^8.18.2",
+    "@vitest/coverage-v8": "^5.0.3",
+    "publint": "^0.3.25",
+    "rxjs": "^7.8.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3",
+    "ws": "^8.22.0"
+  }
+}
