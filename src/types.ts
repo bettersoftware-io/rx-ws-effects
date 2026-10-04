@@ -31,4 +31,10 @@ export interface Socket {
   readonly messages$: Observable<Inbound>;
   send(message: Outbound): void;
   readonly closed$: Observable<void>;
+  /**
+   * Optional. Called when the listener gives up on this connection (its
+   * effect errored, or `send` threw), so the client sees a closed socket and
+   * can reconnect, instead of talking to a connection nothing serves.
+   */
+  close?(): void;
 }

@@ -1,6 +1,6 @@
-import { of, throwError } from "rxjs";
+import { of, Subject, throwError } from "rxjs";
 import { toArray } from "rxjs/operators";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { rpc } from "./rpc.js";
 import type { Inbound } from "./types.js";
@@ -98,6 +98,52 @@ describe("rpc", () => {
     const in$ = of<Inbound>({ type: "rpc.x", payload: {}, correlationId: "3" });
     expect(await drain(effect(in$, undefined))).toEqual([
       { type: "rpc.x.response", payload: { type: "nack" }, correlationId: "3" },
+    ]);
+  });
+
+  it("nacks a request that arrives while maxActive are in flight, and accepts again when one settles", () => {
+    const refused = vi.spyOn(console, "warn").mockImplementation(() => {});
+    onTestFinished(() => {
+      refused.mockRestore();
+    });
+    const pending: Subject<unknown>[] = [];
+    const effect = rpc<unknown>(
+      "rpc.x",
+      "rpc.x.response",
+      () => {
+        const result = new Subject<unknown>();
+        pending.push(result);
+        return result;
+      },
+      { maxActive: 2 },
+    );
+    const in$ = new Subject<Inbound>();
+    const outs: unknown[] = [];
+    effect(in$, undefined).subscribe((frame) => {
+      outs.push(frame);
+    });
+
+    in$.next({ type: "rpc.x", correlationId: "a" });
+    in$.next({ type: "rpc.x", correlationId: "b" });
+    in$.next({ type: "rpc.x", correlationId: "c" });
+
+    expect(pending).toHaveLength(2);
+    expect(outs).toEqual([
+      { type: "rpc.x.response", payload: { type: "nack" }, correlationId: "c" },
+    ]);
+    expect(refused).toHaveBeenCalledTimes(1);
+
+    pending[0]?.next("done");
+    in$.next({ type: "rpc.x", correlationId: "d" });
+
+    expect(pending).toHaveLength(3);
+    expect(outs).toEqual([
+      { type: "rpc.x.response", payload: { type: "nack" }, correlationId: "c" },
+      {
+        type: "rpc.x.response",
+        payload: { type: "ack", payload: "done" },
+        correlationId: "a",
+      },
     ]);
   });
 });

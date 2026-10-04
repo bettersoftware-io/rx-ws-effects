@@ -100,6 +100,11 @@ function toSocket(ws: WebSocket): Socket {
         ws.send(JSON.stringify(message));
       }
     },
+    // The listener calls this when it gives up on the connection, so the
+    // client sees it drop instead of waiting on replies that will never come.
+    close: (): void => {
+      ws.close(1011, "internal error");
+    },
   };
 }
 

@@ -57,9 +57,9 @@ const listen = createWsListener(combineEffects(subscribePrices, getTime), {
 });
 ```
 
-**3. Hand it each connection.** `listen` takes a `Socket`, which has three
-members: a stream of parsed messages, a `send`, and a stream that fires on
-close. You adapt your transport to it.
+**3. Hand it each connection.** `listen` takes a `Socket`: a stream of parsed
+messages, a `send`, a stream that fires on close, and optionally a `close`.
+You adapt your transport to it.
 
 ```ts
 new WebSocketServer({ port: 4000 }).on("connection", (ws) => {
@@ -75,7 +75,7 @@ including a `toSocket` adapter for [`ws`](https://github.com/websockets/ws).
 | Export | What it is for |
 |---|---|
 | `WsEffect<Ctx>` | The one primitive. Anything of this shape is an effect; the helpers below only save typing |
-| `rpc(inType, outType, handle)` | Request and reply. Replies `{ type: "ack", payload }` with the handler's first value, or `{ type: "nack" }` if it throws or fails, on the request's `correlationId` |
+| `rpc(inType, outType, handle)` | Request and reply. Replies `{ type: "ack", payload }` with the handler's first value, or `{ type: "nack" }` if it throws, fails or is refused, on the request's `correlationId` |
 | `stream(inType, project)` | One message starts one stream of replies: a snapshot followed by updates, a one-off fan-out |
 | `keyedStream(subType, unsubType, keyOf, project)` | A live subscription that a client can repeat and cancel. Messages with the same key share one producer, counted in and out |
 | `combineEffects(...effects)` | Merges effects over one shared inbound stream |
@@ -103,16 +103,21 @@ Errors are caught at four levels, closest to the failure first:
 | One reply stream (`stream`, `keyedStream`) | It is logged and ends. The effect keeps serving other messages and other keys |
 | One request (`rpc`) | The client gets a `nack` on the same `correlationId`. A handler that throws synchronously is caught the same way |
 | One effect (`combineEffects`) | It is logged and stops for the rest of that connection. Its sibling effects carry on |
-| One connection (`createWsListener`) | It is logged and that connection's effects stop. The process, and every other connection, carries on |
+| One connection (`createWsListener`) | An effect error that got this far, or a `send` that throws, is logged and ends that connection: its effects are unsubscribed and the socket is closed, if the adapter gave it a `close`. The process, and every other connection, carries on |
+
+Give your adapter a `close`. Without one, a connection whose effects have
+stopped stays open and answers nothing; with one, the client sees it drop and
+can reconnect.
 
 ## Limits a client cannot exceed
 
-A client chooses how many subscriptions it opens, so both subscription helpers
-have a ceiling per connection. A message over the ceiling is dropped and
-logged.
+A client chooses how much it asks for, so every helper has a ceiling per
+connection. A message over the ceiling is logged and refused: a subscription
+is dropped, a request is nacked.
 
 | Option | Default | Caps |
 |---|---|---|
+| `rpc(…, { maxActive })` | 64 | Requests still waiting on their handler |
 | `stream(…, { maxActive })` | 64 | Reply streams live at once for that effect |
 | `keyedStream(…, { maxKeys })` | 128 | Distinct keys that effect will ever track |
 
@@ -131,7 +136,13 @@ const messages$ = new Subject<Inbound>();
 const closed$ = new Subject<void>();
 const sent: Outbound[] = [];
 
-listen({ messages$, closed$, send: (message) => sent.push(message) });
+listen({
+  messages$,
+  closed$,
+  send: (message) => {
+    sent.push(message);
+  },
+});
 
 messages$.next({ type: "time.get", correlationId: "1" });
 // sent: [{ type: "time", payload: { type: "ack", payload: 1791129221907 }, correlationId: "1" }]

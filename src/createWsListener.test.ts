@@ -1,4 +1,4 @@
-import { map, type Observable, Subject } from "rxjs";
+import { map, merge, type Observable, of, Subject } from "rxjs";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { combineEffects } from "./combineEffects.js";
@@ -52,10 +52,7 @@ describe("createWsListener", () => {
   });
 
   it("logs an effect that errors instead of throwing, and leaves other connections working", () => {
-    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
-    onTestFinished(() => {
-      logged.mockRestore();
-    });
+    const logged = silenceErrorLog();
     const listen = createWsListener(failOnBoom, undefined);
     const broken = createFakeSocket();
     const healthy = createFakeSocket();
@@ -71,7 +68,92 @@ describe("createWsListener", () => {
     expect(broken.sent).toEqual([]);
     expect(healthy.sent).toEqual([{ type: "pong" }]);
   });
+
+  it("closes a socket whose effect errored, so the client is not left talking to nothing", () => {
+    silenceErrorLog();
+    const { socket, messages$ } = createFakeSocket();
+    const close = vi.fn();
+    createWsListener(failOnBoom, undefined)({ ...socket, close });
+
+    messages$.next({ type: "boom" });
+
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it("ends the connection when send throws, instead of letting the error escape", () => {
+    const logged = silenceErrorLog();
+    const { socket, messages$ } = createFakeSocket();
+    const close = vi.fn();
+    const send = vi.fn(() => {
+      throw new Error("cannot serialise");
+    });
+    createWsListener(pingPong, undefined)({ ...socket, send, close });
+
+    // RxJS rethrows an error from a subscriber's `next` on a timer, where
+    // nothing can catch it: under Node that ends the process. Fake timers
+    // make that rethrow observable here.
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    messages$.next({ type: "ping" });
+    messages$.next({ type: "ping" });
+
+    expect(() => {
+      vi.runAllTimers();
+    }).not.toThrow();
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(logged).toHaveBeenCalledTimes(1);
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(messages$.observers.length).toBe(0);
+  });
+
+  it("ends the connection when the very first send throws, while the effect is still being subscribed", () => {
+    silenceErrorLog();
+    const { socket, messages$ } = createFakeSocket();
+    const close = vi.fn();
+    const send = vi.fn(() => {
+      throw new Error("cannot serialise");
+    });
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+
+    createWsListener(greetOnConnect, undefined)({ ...socket, send, close });
+
+    expect(() => {
+      vi.runAllTimers();
+    }).not.toThrow();
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(messages$.observers.length).toBe(0);
+  });
+
+  it("still ends the connection when closing the socket throws too", () => {
+    const logged = silenceErrorLog();
+    const { socket, messages$ } = createFakeSocket();
+    const close = vi.fn(() => {
+      throw new Error("already destroyed");
+    });
+    createWsListener(failOnBoom, undefined)({ ...socket, close });
+
+    expect(() => {
+      messages$.next({ type: "boom" });
+    }).not.toThrow();
+    expect(logged).toHaveBeenCalledTimes(2);
+    expect(messages$.observers.length).toBe(0);
+  });
 });
+
+function silenceErrorLog(): ReturnType<typeof vi.spyOn> {
+  const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+  onTestFinished(() => {
+    logged.mockRestore();
+  });
+
+  return logged;
+}
 
 function pingPong(in$: Observable<Inbound>): Observable<Outbound> {
   return in$.pipe(
@@ -80,6 +162,11 @@ function pingPong(in$: Observable<Inbound>): Observable<Outbound> {
       return out("pong");
     }),
   );
+}
+
+/** Emits before `subscribe` has returned, then keeps listening. */
+function greetOnConnect(in$: Observable<Inbound>): Observable<Outbound> {
+  return merge(of(out("hello")), pingPong(in$));
 }
 
 function failOnBoom(in$: Observable<Inbound>): Observable<Outbound> {
