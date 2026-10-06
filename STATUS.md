@@ -3,7 +3,7 @@
 What is not done yet. Finished work is removed from this page, not archived;
 the [changelog](CHANGELOG.md) says what shipped.
 
-**Last updated: 2026-10-04**
+**Last updated: 2026-10-06**
 
 ## Waiting on the owner
 
@@ -19,6 +19,14 @@ the [changelog](CHANGELOG.md) says what shipped.
   the publish, or sooner with an exclusion.
 - **The starter in [bettersoftware-io/skills](https://github.com/bettersoftware-io/skills)
   uses this package in its server.** Same wait.
+
+## Dated
+
+- **From 19 October 2026 `ubuntu-latest` means Ubuntu 26.** GitHub's notice:
+  [actions/runner-images#14748](https://github.com/actions/runner-images/issues/14748).
+  This repository's one workflow, `ci.yml`, uses that label. Decide whether
+  to pin a version (`ubuntu-24.04`) or to move with the label, and re-run CI
+  once the change lands.
 
 ## Open decisions
 
