@@ -1,10 +1,14 @@
 name: Release
 
-# Publishes the version a pushed tag names. npm's trusted publishing lets this
-# job publish with a short-lived OIDC token, so no npm token is stored here,
+# Stages the version a pushed tag names. npm's trusted publishing lets this
+# job upload it with a short-lived OIDC token, so no npm token is stored here,
 # and the release carries provenance: npm links it to this workflow's run.
 # On npmjs.com the package's trusted publisher names this repository, this
-# file (release.yml) and the environment below.
+# file (release.yml) and the environment below, and allows staging only.
+#
+# A staged version is on npm but cannot be installed. It is published when the
+# owner approves it with their second factor (`npm stage approve <id>`), so
+# this workflow alone, or whoever takes it over, cannot ship a version.
 on:
   push:
     tags: ["v*"]
@@ -28,7 +32,7 @@ jobs:
           # The whole history, so the step below can see main.
           fetch-depth: 0
 
-      # Trusted publishing needs npm 11.5.1 or later; Node 24 ships 11.19.
+      # Trusted publishing needs npm 11.5.1 or later; Node 24 ships 11.19, which stages.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
@@ -54,6 +58,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # prepublishOnly runs `pnpm check` first, as for a publish by hand.
-      - name: Publish
-        run: npm publish
+      # The check a publish by hand runs in prepublishOnly, here as a step of its
+      # own: npm does not say whether staging runs that script.
+      - name: Typecheck, tests with coverage, build, package checks
+        run: pnpm check
+
+      # Provenance is off for a staged publish unless asked for.
+      - name: Stage the release
+        run: npm stage publish --provenance
