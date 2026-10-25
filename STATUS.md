@@ -15,13 +15,17 @@ the [changelog](CHANGELOG.md) says what shipped.
 - **Trusted publishing.** 0.1.0 was published by hand from a laptop. The
   release workflow is written (`.github/workflows/release.yml`: a pushed
   `v*` tag that names `package.json`'s version, on a commit on `main`, is
-  published with provenance and no stored token). npm accepts it once the
-  package has a trusted publisher: on npmjs.com, the package's Settings,
-  Trusted Publisher, GitHub Actions, with `bettersoftware-io`,
-  `rx-ws-effects`, `release.yml` and the environment `npm`. Then, under
-  Publishing access, "Require two-factor authentication and disallow
-  tokens" leaves the workflow as the only way to publish. Until then a tag
-  fails its Publish step and publishes nothing.
+  staged on npm with provenance and no stored token, and published when the
+  owner runs `npm stage approve <id>` with their second factor). npm accepts
+  it once the package has a trusted publisher: on npmjs.com, the package's
+  Settings, Trusted Publisher, GitHub Actions, with `bettersoftware-io`,
+  `rx-ws-effects`, `release.yml` and the environment `npm`, and "Allow npm
+  publish" left unticked, so that it may only stage. Then, under Publishing
+  access, "Require two-factor authentication and disallow bypass 2fa tokens"
+  leaves no token that publishes without a second factor: what is left is
+  this workflow, which only stages, and the owner in person. Until the trusted publisher is set up, a tag fails at its
+  staging step and stages nothing. Not seen yet: a staged release from the
+  workflow, and whether `npm stage list` prints the id that `approve` takes.
 
 ## Waiting on the release age
 

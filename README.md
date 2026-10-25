@@ -179,8 +179,16 @@ check that the published files work, not just the source.
 A release is a tag. Merge the version in `package.json` and its entry in
 `CHANGELOG.md`, then tag that commit on `main` with the version and push the
 tag (`git tag v0.2.0 && git push origin v0.2.0`). The Release workflow runs
-`pnpm check` again and publishes to npm with provenance; it refuses a tag that
-names another version or a commit that is not on `main`.
+`pnpm check` again and stages the version on npm with provenance; it refuses a
+tag that names another version or a commit that is not on `main`. A staged
+version cannot be installed until the owner approves it with their second
+factor:
+
+```bash
+npm stage list @better-software/rx-ws-effects   # the staged version and its id
+npm stage download <id>                         # the tarball, to look at first
+npm stage approve <id>                          # publishes it
+```
 
 ## Where it came from
 
