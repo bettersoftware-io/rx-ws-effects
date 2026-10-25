@@ -1,0 +1,59 @@
+name: Release
+
+# Publishes the version a pushed tag names. npm's trusted publishing lets this
+# job publish with a short-lived OIDC token, so no npm token is stored here,
+# and the release carries provenance: npm links it to this workflow's run.
+# On npmjs.com the package's trusted publisher names this repository, this
+# file (release.yml) and the environment below.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: publish to npm
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      # The OIDC token npm exchanges for a publish.
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          # The whole history, so the step below can see main.
+          fetch-depth: 0
+
+      # Trusted publishing needs npm 11.5.1 or later; Node 24 ships 11.19.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Enable Corepack (provisions the pnpm pinned by the packageManager field)
+        run: corepack enable
+
+      # A tag pushed by mistake publishes nothing: it must name the version in
+      # package.json, on a commit that is on main.
+      - name: The tag names package.json's version, on main
+        run: |
+          version="v$(node -p 'require("./package.json").version')"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::The tag is $GITHUB_REF_NAME, package.json says $version."
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::$GITHUB_REF_NAME is not on main."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # prepublishOnly runs `pnpm check` first, as for a publish by hand.
+      - name: Publish
+        run: npm publish

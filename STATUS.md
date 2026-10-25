@@ -13,10 +13,15 @@ the [changelog](CHANGELOG.md) says what shipped.
   `npm deprecate @better-software/rx-ws-effects@0.0.0-stage "a placeholder, not a release"`
   says so to anyone who asks for it by name.
 - **Trusted publishing.** 0.1.0 was published by hand from a laptop. The
-  package now exists on npm, so npm's trusted publishing (OIDC from GitHub
-  Actions, no token to store) can be set up: on npmjs.com, the package's
-  settings, a trusted publisher for this repository and a release workflow
-  file. The workflow itself is not written yet (see "Not built").
+  release workflow is written (`.github/workflows/release.yml`: a pushed
+  `v*` tag that names `package.json`'s version, on a commit on `main`, is
+  published with provenance and no stored token). npm accepts it once the
+  package has a trusted publisher: on npmjs.com, the package's Settings,
+  Trusted Publisher, GitHub Actions, with `bettersoftware-io`,
+  `rx-ws-effects`, `release.yml` and the environment `npm`. Then, under
+  Publishing access, "Require two-factor authentication and disallow
+  tokens" leaves the workflow as the only way to publish. Until then a tag
+  fails its Publish step and publishes nothing.
 
 ## Waiting on the release age
 
@@ -53,9 +58,6 @@ refuses a version younger than 24 hours in both projects below
 
 ## Not built
 
-- **Releases are made by hand.** There is no release workflow. With trusted
-  publishing set up on npmjs.com (see "Waiting on the owner"), a workflow on a
-  version tag would publish with provenance and no stored token.
 - **The example has no automated test.** `examples/price-server.ts` is
   typechecked against the built package in `pnpm check`, and was run once by
   hand against a real WebSocket client.
