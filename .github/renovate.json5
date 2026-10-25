@@ -1,0 +1,57 @@
+// Renovate: one wave of update pull requests a week, grouped, never for a
+// release younger than a week. The policy of the other bettersoftware-io
+// repositories (bettersoftware-skills' ci-security add-on ships it), and what
+// a published library needs on top of it.
+//
+// It also opens the pull request that fixes a known advisory, from the
+// repository's Dependabot alerts (a setting, on). A fix does not wait for the
+// schedule or the week below. Dependabot security updates, the other setting,
+// stay off: with both on, each fix would arrive twice.
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    // The workflow's actions are pinned by their commit. Renovate moves the
+    // commit and the version comment beside it together.
+    "helpers:pinGitHubActionDigests"
+  ],
+
+  // A release that turns out to be malicious is usually found and removed
+  // within days. Waiting a week means it is rarely installed here.
+  "minimumReleaseAge": "7 days",
+  // Hold an update back until it is old enough. Without this the pull request
+  // opens at once with a pending check.
+  "internalChecksFilter": "strict",
+
+  // One wave, on Monday (UTC). The whole day: the app does not run every
+  // repository in every window, and a missed one waits a week.
+  "schedule": ["on monday"],
+  "prConcurrentLimit": 5,
+
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+
+  "packageRules": [
+    {
+      // Minor and patch releases arrive as one pull request. A major release
+      // gets its own, because it is the one that needs reading.
+      "groupName": "minor and patch",
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      // The workflow's actions, in one pull request. After the rule above, so
+      // that it wins for an action: a later rule overrides.
+      "groupName": "actions",
+      "matchManagers": ["github-actions"]
+    },
+    {
+      // What the package asks of the projects that install it: the rxjs it
+      // runs with and the Node it runs on. Moving either is a change to the
+      // published package, made in a release, not a dependency update. The
+      // rxjs it is tested with is a devDependency, and still moves.
+      "matchDepTypes": ["peerDependencies", "engines"],
+      "enabled": false
+    }
+  ]
+}
