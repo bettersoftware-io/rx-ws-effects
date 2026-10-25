@@ -21,9 +21,9 @@ the [changelog](CHANGELOG.md) says what shipped.
   Settings, Trusted Publisher, GitHub Actions, with `bettersoftware-io`,
   `rx-ws-effects`, `release.yml` and the environment `npm`, and "Allow npm
   publish" left unticked, so that it may only stage. Then, under Publishing
-  access, "Require two-factor authentication and disallow tokens" refuses
-  every npm token: what is left is this workflow, which only stages, and the
-  owner in person. Until the trusted publisher is set up, a tag fails at its
+  access, "Require two-factor authentication and disallow bypass 2fa tokens"
+  leaves no token that publishes without a second factor: what is left is
+  this workflow, which only stages, and the owner in person. Until the trusted publisher is set up, a tag fails at its
   staging step and stages nothing. Not seen yet: a staged release from the
   workflow, and whether `npm stage list` prints the id that `approve` takes.
 
