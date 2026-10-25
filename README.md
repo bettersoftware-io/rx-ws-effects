@@ -176,19 +176,9 @@ pnpm check      # typecheck, tests with coverage, build, and the package checks
 and using it by name, under Node's resolver and under TypeScript's. That is the
 check that the published files work, not just the source.
 
-A release is a tag. Merge the version in `package.json` and its entry in
-`CHANGELOG.md`, then tag that commit on `main` with the version and push the
-tag (`git tag v0.2.0 && git push origin v0.2.0`). The Release workflow runs
-`pnpm check` again and stages the version on npm with provenance; it refuses a
-tag that names another version or a commit that is not on `main`. A staged
-version cannot be installed until the owner approves it with their second
-factor:
-
-```bash
-npm stage list @better-software/rx-ws-effects   # the staged version and its id
-npm stage download <id>                         # the tarball, to look at first
-npm stage approve <id>                          # publishes it
-```
+A release is a tag: the Release workflow stages the version on npm, and the
+owner approves it with their second factor. [RELEASING.md](RELEASING.md) has
+the steps, what is set up on npm, and why.
 
 ## Where it came from
 
