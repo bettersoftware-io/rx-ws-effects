@@ -3,30 +3,42 @@
 What is not done yet. Finished work is removed from this page, not archived;
 the [changelog](CHANGELOG.md) says what shipped.
 
-**Last updated: 2026-10-06**
+**Last updated: 2026-10-25**
 
 ## Waiting on the owner
 
-- **Publish 0.1.0 to npm.** Nothing is on npm yet. It needs the owner's npm
-  login: `npm login`, then `pnpm publish` on `main` (it runs `pnpm check`
-  first).
+- **The `0.0.0-stage` version on npm.** npm wrote it as a placeholder, two
+  files and no code (`"stub": true`), a minute before 0.1.0 on 2026-10-25.
+  `latest` is 0.1.0, so an install takes 0.1.0, but the stub stays listed.
+  `npm deprecate @better-software/rx-ws-effects@0.0.0-stage "a placeholder, not a release"`
+  says so to anyone who asks for it by name.
+- **Trusted publishing.** 0.1.0 was published by hand from a laptop. The
+  package now exists on npm, so npm's trusted publishing (OIDC from GitHub
+  Actions, no token to store) can be set up: on npmjs.com, the package's
+  settings, a trusted publisher for this repository and a release workflow
+  file. The workflow itself is not written yet (see "Not built").
 
-## Waiting on the publish
+## Waiting on the release age
+
+0.1.0 was published on 2026-10-25 at 13:05 UTC (tag `v0.1.0`, commit
+`87e7c44`; the tarball is that commit's `pnpm pack`, file for file). pnpm
+refuses a version younger than 24 hours in both projects below
+(`minimumReleaseAge`), so each can start from 2026-10-26, 13:05 UTC.
 
 - **ReactiveTraderCloudClone swaps its workspace copy for this package.**
-  Tracked in that repository's `docs/STATUS.md`. pnpm refuses a version
-  younger than 24 hours there (`minimumReleaseAge`), so it starts a day after
-  the publish, or sooner with an exclusion.
+  Tracked in that repository's `docs/STATUS.md`.
 - **The starter in [bettersoftware-io/skills](https://github.com/bettersoftware-io/skills)
-  uses this package in its server.** Same wait.
+  uses this package in its server.** Tracked in that repository's
+  `docs/STATUS.md`.
 
 ## Dated
 
-- **From 19 October 2026 `ubuntu-latest` means Ubuntu 26.** GitHub's notice:
-  [actions/runner-images#14748](https://github.com/actions/runner-images/issues/14748).
-  This repository's one workflow, `ci.yml`, uses that label. Decide whether
-  to pin a version (`ubuntu-24.04`) or to move with the label, and re-run CI
-  once the change lands.
+- **`ubuntu-latest` moves to Ubuntu 26 between 19 October and 19 November
+  2026** ([actions/runner-images#14748](https://github.com/actions/runner-images/issues/14748)).
+  This repository's one workflow, `ci.yml`, uses that label, and moves with
+  it, as decided for the plugin's repositories on 2026-10-16 (their trial on
+  `ubuntu-26.04` passed). On 2026-10-24 the runners were still on 24.04. Look
+  at the first run after the switch.
 
 ## Open decisions
 
@@ -41,9 +53,9 @@ the [changelog](CHANGELOG.md) says what shipped.
 
 ## Not built
 
-- **Releases are made by hand.** There is no release workflow. npm's trusted
-  publishing (OIDC from GitHub Actions, no token to store) can only be set up
-  once the package exists on npm.
+- **Releases are made by hand.** There is no release workflow. With trusted
+  publishing set up on npmjs.com (see "Waiting on the owner"), a workflow on a
+  version tag would publish with provenance and no stored token.
 - **The example has no automated test.** `examples/price-server.ts` is
   typechecked against the built package in `pnpm check`, and was run once by
   hand against a real WebSocket client.
