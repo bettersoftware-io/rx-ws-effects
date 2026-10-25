@@ -5,27 +5,16 @@ the [changelog](CHANGELOG.md) says what shipped.
 
 **Last updated: 2026-10-25**
 
-## Waiting on the owner
+## Waiting on a release
 
-- **The `0.0.0-stage` version on npm.** npm wrote it as a placeholder, two
-  files and no code (`"stub": true`), a minute before 0.1.0 on 2026-10-25.
-  `latest` is 0.1.0, so an install takes 0.1.0, but the stub stays listed.
-  `npm deprecate @better-software/rx-ws-effects@0.0.0-stage "a placeholder, not a release"`
-  says so to anyone who asks for it by name.
-- **Trusted publishing.** 0.1.0 was published by hand from a laptop. The
-  release workflow is written (`.github/workflows/release.yml`: a pushed
-  `v*` tag that names `package.json`'s version, on a commit on `main`, is
-  staged on npm with provenance and no stored token, and published when the
-  owner runs `npm stage approve <id>` with their second factor). npm accepts
-  it once the package has a trusted publisher: on npmjs.com, the package's
-  Settings, Trusted Publisher, GitHub Actions, with `bettersoftware-io`,
-  `rx-ws-effects`, `release.yml` and the environment `npm`, and "Allow npm
-  publish" left unticked, so that it may only stage. Then, under Publishing
-  access, "Require two-factor authentication and disallow bypass 2fa tokens"
-  leaves no token that publishes without a second factor: what is left is
-  this workflow, which only stages, and the owner in person. Until the trusted publisher is set up, a tag fails at its
-  staging step and stages nothing. Not seen yet: a staged release from the
-  workflow, and whether `npm stage list` prints the id that `approve` takes.
+- **The release workflow has not made a release yet.** Since 2026-10-25 a
+  pushed tag stages the version on npm and the owner approves it
+  ([RELEASING.md](RELEASING.md)), and npm is set up for it, but for the
+  trusted publisher: npm expires one that publishes nothing within two days,
+  so it is created on the day of the next release (step 2 there). Not seen
+  yet: a version staged by the workflow, whether a staged publish validates
+  the trusted publisher, whether `npm stage list` prints the id that
+  `approve` takes, and the provenance of a staged version.
 
 ## Waiting on the release age
 
