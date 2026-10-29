@@ -187,6 +187,11 @@ Extracted from
 where it replaced a server's message `switch`. The shape is a homage to
 [Marble.js](https://github.com/marblejs/marble) effects, written from scratch.
 
+Two servers run on the published package: that project's, since 2026-10-27,
+and the server of the starter in
+[bettersoftware-io/skills](https://github.com/bettersoftware-io/skills), which
+every project made from it begins with.
+
 ## Licence
 
 MIT

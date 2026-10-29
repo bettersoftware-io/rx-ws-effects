@@ -3,7 +3,7 @@
 What is not done yet. Finished work is removed from this page, not archived;
 the [changelog](CHANGELOG.md) says what shipped.
 
-**Last updated: 2026-10-25**
+**Last updated: 2026-10-29**
 
 ## Waiting on a release
 
@@ -15,19 +15,6 @@ the [changelog](CHANGELOG.md) says what shipped.
   yet: a version staged by the workflow, whether a staged publish validates
   the trusted publisher, whether `npm stage list` prints the id that
   `approve` takes, and the provenance of a staged version.
-
-## Waiting on the release age
-
-0.1.0 was published on 2026-10-25 at 13:05 UTC (tag `v0.1.0`, commit
-`87e7c44`; the tarball is that commit's `pnpm pack`, file for file). pnpm
-refuses a version younger than 24 hours in both projects below
-(`minimumReleaseAge`), so each can start from 2026-10-26, 13:05 UTC.
-
-- **ReactiveTraderCloudClone swaps its workspace copy for this package.**
-  Tracked in that repository's `docs/STATUS.md`.
-- **The starter in [bettersoftware-io/skills](https://github.com/bettersoftware-io/skills)
-  uses this package in its server.** Tracked in that repository's
-  `docs/STATUS.md`.
 
 ## Dated
 
