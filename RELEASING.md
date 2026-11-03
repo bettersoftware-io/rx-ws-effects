@@ -39,8 +39,8 @@ for nothing else.
 - **The same checks every time.** The workflow runs `pnpm check`, the command
   a person runs before publishing, on a clean machine.
 
-npm needs version 11.5.1 or later for trusted publishing. Node 24, which the
-workflow uses, ships npm 11.19.1, which has it and has `npm stage`.
+npm needs version 11.5.1 or later for trusted publishing. Node 26, which the
+workflow uses, ships npm 11.20.0, which has it and has `npm stage`.
 
 ### The workflow stages; the owner publishes
 
